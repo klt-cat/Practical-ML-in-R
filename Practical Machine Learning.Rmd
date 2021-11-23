@@ -2,7 +2,9 @@
 title: "R Project - Practical Machine Learning"
 author: "Lien Dinh"
 date: "11/22/2021"
-output: html_document
+output:
+  html_document: default
+  pdf_document: default
 ---
 
 ```{r setup, include=FALSE}
@@ -62,9 +64,9 @@ model_tree <- train(classe~.,data=train,method="rpart")
 model_tree$results # see cp, accuracy and kappa by the splits
 # Apply, Visualize & Assess Model
 predictions_tree <- predict(model_tree,traincv)
-rpart.plot(model_tree$finalModel) # plot tree: some overfitting clearly present
+rpart.plot(model_tree$finalModel) # plot tree: class D is absent from predictions
 matrix_tree <- confusionMatrix(predictions_tree,traincv$classe)
-matrix_tree # low accuracy, close to random
+matrix_tree # low accuracy, close if not worse than random
 ```
 
 2. Bagging / Bootstrap Aggregating
@@ -107,7 +109,7 @@ matrix_boost # good accuracy as well
 
 ### Model Comparison & Selection
 
-Compile performance statistics on the 4 generated models to compare. Random forest model has the best overall accuracy.
+Compile performance statistics on the 4 generated models to compare. Random forest model has the best overall accuracy. 
 
 ```{r results="markup"}
 df_matrices <- data.frame(matrix_tree$overall, matrix_bg$overall, matrix_rf$overall, matrix_boost$overall)
@@ -116,10 +118,12 @@ df_matrices
 
 ### Final Predictions
 
-Use random forest model to generate final predictions on the test set.
+Use random forest model to generate final predictions on the test set. Out of sample error is estimated at .008 as per the below.
 
 ```{r results="markup"}
 ### FINAL PREDICTIONS
+traincv$accurate <- predictions_rf == traincv$classe # assess accuracy of prediction
+1-sum(traincv$accurate)/nrow(traincv) # out of sample error, MSRE not meaningful for factor prediction
 predictions_final <- predict(model_rf, testing)
 predictions_final
 ```
